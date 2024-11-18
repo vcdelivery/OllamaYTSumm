@@ -3,14 +3,20 @@ from ollama import Client
 from youtube_transcript_api import YouTubeTranscriptApi
 
 # YOUR OLLAMA SERVER
-AI = Client(host='http://ollama-server:11434')
+AI = Client(host='http://localhost:11434/')
 
 def getVideoID(url) -> str:
     """
     This function gets the video id from the url provided by the user.
+    Handles different YouTube URL formats.
     """
-    video_id = url.split("v=")[1]
-    return video_id
+    # Handle different YouTube URL patterns
+    if "youtu.be/" in url:
+        return url.split("youtu.be/")[1].split("?")[0]
+    elif "v=" in url:
+        return url.split("v=")[1].split("&")[0]
+    else:
+        raise ValueError("Invalid YouTube URL format")
 
 def get_transcription(video_id) -> dict:
     """
@@ -52,30 +58,37 @@ def main():
     print("\nWelcome to the Youtube Summarizer. Powered by AI.")
     print("----------------------------------------------------------")
     url = input("Insert the video URL here: ")
-    video_id = getVideoID(url)
-    transcript = get_transcription(video_id)
-    availableModels = getAvailableModels()
-    
-    print("\nAvailable models: ")
-    model_names = [each['name'] for each in availableModels['models']]
-    for i, name in enumerate(model_names, start=1):
-        print(f"{i}: {name}")
-    
-    print("\n")
-    selected_model_index = int(input("Choose the model you want to use: "))
-    print("\n--------------------------------------------------------")
-    
-    if 1 <= selected_model_index <= len(model_names):
-        usrModel = model_names[selected_model_index - 1]
-        print("You've selected the model: " + usrModel)
-        print("--------------------------------------------------------\n")
-        print("Summarizing...")
+    try:
+        video_id = getVideoID(url)
+        transcript = get_transcription(video_id)
+        availableModels = getAvailableModels()
         
-        summary = askOllama(transcript, usrModel)
-        time.sleep(1)
-        print("\nSummary:\n" + summary['message']['content'])
-    else:
-        print("Invalid model number selected.")
+        print("\nAvailable models: ")
+        model_names = [each['name'] for each in availableModels['models']]
+        for i, name in enumerate(model_names, start=1):
+            print(f"{i}: {name}")
+        
+        print("\n")
+        selected_model_index = int(input("Choose the model you want to use: "))
+        print("\n--------------------------------------------------------")
+        
+        if 1 <= selected_model_index <= len(model_names):
+            usrModel = model_names[selected_model_index - 1]
+            print("You've selected the model: " + usrModel)
+            print("--------------------------------------------------------\n")
+            print("Summarizing...")
+            
+            summary = askOllama(transcript, usrModel)
+            time.sleep(1)
+            print("\nSummary:\n" + summary['message']['content'])
+        else:
+            print("Invalid model number selected.")
+    except ValueError as e:
+        print(f"Error: {e}")
+        return
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return
 
     
 if __name__ == "__main__":

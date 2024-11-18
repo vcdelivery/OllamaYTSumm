@@ -25,8 +25,11 @@ pip install -r requirements.txt
 
 ## Run the script
 ```
-python3 main.py
+python -m streamlit run main.py
 ```
+
+
+
 
 ## To Do 
 * Work the system prompt to get the best result possible with (hopefully) the most ammount of models.
